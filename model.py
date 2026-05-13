@@ -1,77 +1,61 @@
-import time
-import streamlit as st
 import torch
 from transformers import pipeline
+from datetime import datetime
 
+# Global model
+classifier = None
 
-# CONSTANTS
-
-ALL_LABELS = [
-    "Business", "Macroeconomics", "Startups", "Stock Market", "Politics", "Geopolitics",
-    "War & Conflict", "Human Rights", "Technology", "Artificial Intelligence",
-    "Cybersecurity", "Science", "Healthcare", "Climate Change", "Entertainment",
-    "Music", "Video Games", "Sports", "Crime", "Religion", "Psychology",
-    "Social Issues", "Mental Health", "Youth & Development", "Education",
-    "Finance & Banking", "Environment", "Space & Astronomy", "Food & Agriculture",
-    "Law & Justice", "Transportation", "Energy", "Philosophy",
-]
-
-TIER_COLORS = {"HIGH": "#16a34a", "MEDIUM": "#d97706", "LOW": "#9ca3af"}
-
-
-# HELPERS
-
-def confidence_tier(score: float) -> str:
-    """Return HIGH / MEDIUM / LOW based on score."""
-    if score >= 0.80:
-        return "HIGH"
-    elif score >= 0.60:
-        return "MEDIUM"
-    return "LOW"
-
-
-# MODEL
-
-@st.cache_resource(show_spinner=False)
 def load_model():
-    """Load and cache the zero-shot classification pipeline."""
-    device = 0 if torch.cuda.is_available() else -1
-    return pipeline(
-        "zero-shot-classification",
-        model="cross-encoder/nli-distilroberta-base",
-        device=device,
+    global classifier
+    if classifier is None:
+        print("Loading zero-shot model... (this may take 10-20 seconds first time)")
+        classifier = pipeline(
+            "zero-shot-classification",
+            model="facebook/bart-large-mnli",      # Best balance for class project
+            # Alternative faster option (uncomment if too slow):
+            # model="valhalla/distilbart-mnli-12-1",
+            device=0 if torch.cuda.is_available() else -1,
+            torch_dtype=torch.float16 if torch.cuda.is_available() else None
+        )
+    return classifier
+
+
+def confidence_tier(score):
+    if score >= 0.65:
+        return "HIGH"
+    elif score >= 0.40:
+        return "MEDIUM"
+    else:
+        return "LOW"
+
+
+def run_single(text, labels, threshold=0.3, top_n=8, multi_label=True):
+    if not text or not text.strip():
+        return [], 0.0
+
+    start_time = datetime.now()
+    
+    model = load_model()
+    
+    result = model(
+        text,
+        candidate_labels=labels,
+        multi_label=multi_label,
+        hypothesis_template="This example is about {}."   # Important for better scores
     )
-
-
-# INFERENCE
-
-def run_single(
-    text: str,
-    labels: list[str],
-    threshold: float,
-    top_n: int,
-    multi_label: bool,
-) -> tuple[list[tuple[str, float]], float]:
-    """
-    Run zero-shot classification on a single text.
-
-    Returns:
-        pairs   – list of (label, score) tuples, sorted descending, filtered by threshold
-        elapsed – inference time in seconds (rounded to 3 dp)
-    """
-    classifier = load_model()
-    t0 = time.time()
-    result = classifier(text, labels, multi_label=multi_label)
-    elapsed = round(time.time() - t0, 3)
-
-    pairs = [
-        (l, s)
-        for l, s in zip(result["labels"], result["scores"])
-        if s >= threshold
-    ]
-
-    if not pairs:  # always return at least one result
-        pairs = [(result["labels"][0], result["scores"][0])]
-
-    pairs = sorted(pairs, key=lambda x: x[1], reverse=True)[:top_n]
-    return pairs, elapsed
+    
+    # Create pairs and sort
+    pairs = list(zip(result['labels'], result['scores']))
+    pairs = sorted(pairs, key=lambda x: x[1], reverse=True)
+    
+    # Apply threshold
+    if not multi_label:
+        pairs = [pairs[0]] if pairs else []
+    else:
+        pairs = [p for p in pairs if p[1] >= threshold]
+    
+    pairs = pairs[:top_n]
+    
+    elapsed = (datetime.now() - start_time).total_seconds()
+    
+    return pairs, round(elapsed, 3)
