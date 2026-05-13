@@ -5,7 +5,7 @@ from datetime import datetime
 # Global classifier
 classifier = None
 
-# Default labels for news classification (you can expand this)
+# Default news-focused labels
 ALL_LABELS = [
     "Technology", "Business", "Politics", "Sports", "Entertainment",
     "Health", "Science", "Environment", "Education", "Finance",
@@ -14,18 +14,23 @@ ALL_LABELS = [
     "International Relations", "Crime", "Culture", "Lifestyle"
 ]
 
+
 def load_model():
+    """Load the zero-shot classification model (only once)."""
     global classifier
     if classifier is None:
+        print("🔄 Loading zero-shot model (first time only)...")
         classifier = pipeline(
             "zero-shot-classification",
             model="facebook/bart-large-mnli",
             device=0 if torch.cuda.is_available() else -1,
+            torch_dtype=torch.float16 if torch.cuda.is_available() else None,
         )
     return classifier
 
 
 def confidence_tier(score: float) -> str:
+    """Return confidence tier based on score."""
     if score >= 0.65:
         return "HIGH"
     elif score >= 0.40:
@@ -35,6 +40,10 @@ def confidence_tier(score: float) -> str:
 
 
 def run_single(text: str, labels: list, threshold=0.3, top_n=8, multi_label=True):
+    """
+    Run zero-shot classification on a single text.
+    Returns top results and inference time.
+    """
     if not text or not text.strip():
         return [], 0.0
 
@@ -46,12 +55,15 @@ def run_single(text: str, labels: list, threshold=0.3, top_n=8, multi_label=True
         text,
         candidate_labels=labels,
         multi_label=multi_label,
-        hypothesis_template="This text is about {}."
+        hypothesis_template="This text is about {}.",
+        truncation=True
     )
     
+    # Create sorted pairs
     pairs = list(zip(result['labels'], result['scores']))
     pairs = sorted(pairs, key=lambda x: x[1], reverse=True)
     
+    # Filter by threshold (multi-label)
     if multi_label:
         pairs = [p for p in pairs if p[1] >= threshold]
     else:
