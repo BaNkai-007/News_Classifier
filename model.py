@@ -16,10 +16,9 @@ ALL_LABELS = [
 
 
 def load_model():
-    """Load the zero-shot classification model (only once)."""
     global classifier
     if classifier is None:
-        print("🔄 Loading zero-shot model (first time only)...")
+        print("🔄 Loading model...")
         classifier = pipeline(
             "zero-shot-classification",
             model="facebook/bart-large-mnli",
