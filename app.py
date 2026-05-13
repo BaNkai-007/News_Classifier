@@ -175,7 +175,7 @@ with col_in:
 with col_out:
     st.markdown("**Results**")
 
-        if not analyze_btn:
+    if not analyze_btn:
         st.info("👉 Run classification to see results")
 
     if analyze_btn and text_input.strip() and selected_labels:
