@@ -18,97 +18,109 @@ st.set_page_config(
 # CSS
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap');
 
     :root {
-        --bg: #0a0a0a;
-        --surface: #111111;
-        --accent: #00d4ff;
+        --bg: #050505;
+        --surface: #0f0f0f;
+        --glass: rgba(20, 20, 30, 0.75);
+        --accent: #00f0ff;
+        --text: #f0f0f0;
     }
 
     html, body, .stApp {
         background: var(--bg) !important;
-        color: #f0f0f0 !important;
+        color: var(--text) !important;
         font-family: 'Inter', sans-serif;
     }
 
+    /* Hero Title */
     h1 {
         font-family: 'Space Grotesk', sans-serif;
-        font-size: 2.8rem;
-        font-weight: 600;
-        letter-spacing: -0.04em;
-        color: white;
-        margin-bottom: 0.2rem;
+        font-size: 3.2rem;
+        font-weight: 700;
+        letter-spacing: -0.06em;
+        background: linear-gradient(90deg, #ffffff, var(--accent));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 0.1rem;
     }
 
-    .subtitle {
+    .tagline {
         color: #888;
-        font-size: 1.1rem;
+        font-size: 1.15rem;
         margin-top: -0.8rem;
-        margin-bottom: 2rem;
+        margin-bottom: 2.2rem;
+        font-weight: 400;
     }
 
-    /* Input Area - News Draft Style */
+    /* Glassmorphism Cards */
+    .glass {
+        background: var(--glass);
+        border: 1px solid rgba(0, 240, 255, 0.15);
+        border-radius: 16px;
+        backdrop-filter: blur(12px);
+    }
+
+    /* Input Area */
     div[data-baseweb="textarea"] {
-        background: #111111 !important;
-        border: 1px solid #333 !important;
-        border-radius: 12px !important;
+        background: #111 !important;
+        border: 1px solid rgba(0, 240, 255, 0.3) !important;
+        border-radius: 16px !important;
     }
     textarea {
-        font-size: 1.1rem !important;
-        line-height: 1.7 !important;
-        color: #eee !important;
+        font-size: 1.15rem !important;
+        line-height: 1.75 !important;
     }
 
-    /* Metrics - Clean News Cards */
+    /* Metrics */
     .metric-card {
-        background: #111111;
-        border: 1px solid #333;
-        border-radius: 12px;
-        padding: 1.4rem 1.3rem;
+        background: var(--glass);
+        border: 1px solid rgba(0, 240, 255, 0.2);
+        border-radius: 16px;
+        padding: 1.5rem 1.2rem;
         text-align: center;
-        min-height: 118px;
+        transition: all 0.2s ease;
+    }
+    .metric-card:hover {
+        border-color: var(--accent);
+        transform: translateY(-2px);
     }
     .metric-label {
-        font-size: 0.75rem;
-        font-weight: 500;
-        letter-spacing: 0.5px;
+        font-size: 0.78rem;
+        letter-spacing: 1px;
         color: #888;
-        margin-bottom: 6px;
+        margin-bottom: 8px;
     }
     .metric-value {
-        font-size: 1.65rem;
+        font-size: 1.85rem;
         font-weight: 600;
-        color: white;
     }
 
     /* Result Cards */
     .result-card {
-        background: #111111;
-        border: 1px solid #333;
-        border-radius: 10px;
-        padding: 1rem 1.3rem;
-        margin-bottom: 0.6rem;
+        background: var(--glass);
+        border: 1px solid rgba(0, 240, 255, 0.15);
+        border-radius: 12px;
+        padding: 1.1rem 1.4rem;
+        margin-bottom: 0.8rem;
         display: flex;
         align-items: center;
         gap: 1rem;
+        transition: all 0.2s ease;
+    }
+    .result-card:hover {
+        border-color: var(--accent);
     }
     .rc-label {
         flex: 1;
-        font-size: 1.05rem;
+        font-size: 1.08rem;
         color: white;
     }
-    .rc-bar-wrap {
-        flex: 1.6;
-        background: #222;
-        height: 6px;
-        border-radius: 999px;
-        overflow: hidden;
-    }
-    .rc-bar {
-        height: 100%;
-        background: #00d4ff;
-        border-radius: 999px;
+
+    /* Sidebar polish */
+    section[data-testid="stSidebar"] {
+        background: #0a0a0a !important;
     }
 
     #MainMenu, footer { visibility: hidden !important; }
@@ -125,12 +137,13 @@ for key in ["history", "total_scans", "total_time"]:
 
 # SIDEBAR
 with st.sidebar:
-    st.title("News Classifier")
-    
-    st.markdown(f"""
-    **Scans this session**  **{st.session_state.total_scans}**  
-    **Total inference**  **{st.session_state.total_time:.2f}s**
-    """)
+    st.markdown("# News Classifier")
+    st.caption("AI-Powered Zero-Shot Analysis")
+
+    st.markdown("---")
+    st.markdown("**Session Stats**")
+    st.markdown(f"**Scans**  {st.session_state.total_scans}")
+    st.markdown(f"**Total Time**  {st.session_state.total_time:.2f}s")
 
     st.markdown("---")
     st.markdown("**Parameters**")
@@ -141,48 +154,50 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("**Active Labels**")
     selected_labels = st.multiselect(
-        "Labels", 
+        "Select labels", 
         ALL_LABELS, 
-        default=ALL_LABELS[:20],
+        default=ALL_LABELS[:18],
         label_visibility="collapsed"
     )
 
 
-# MAIN UI
+# MAIN LAYOUT
 st.title("News Classifier")
-st.markdown('<p class="subtitle">Zero-shot text classification for news &amp; articles</p>', unsafe_allow_html=True)
+st.markdown('<p class="tagline">Instant AI understanding of any news article</p>', unsafe_allow_html=True)
 
 col_in, col_out = st.columns([1.05, 0.95], gap="large")
 
 with col_in:
-    st.markdown("**Input**")
+    st.markdown("**Paste your article**")
     text_input = st.text_area(
         "Input",
-        height=380,
-        placeholder="Paste your news article, headline, or paragraph here...",
+        height=420,
+        placeholder="Breaking: Apple has acquired a major stake in OpenAI...",
         label_visibility="collapsed"
     )
 
     b1, b2 = st.columns([2, 1])
     with b1:
-        analyze_btn = st.button("Classify Article", type="primary", use_container_width=True)
+        analyze_btn = st.button("🚀 Analyze Article", type="primary", use_container_width=True)
     with b2:
         if st.button("Clear", use_container_width=True):
             st.rerun()
 
-
-# RESULTS
 with col_out:
-    st.markdown("**Results**")
+    st.markdown("**Analysis Results**")
 
     if not analyze_btn:
-        st.info("👉 Run classification to see results")
+        st.markdown("""
+        <div style="background:rgba(15,15,25,0.6); border:1px solid rgba(0,240,255,0.15); 
+                    border-radius:16px; padding:3rem 2rem; text-align:center; color:#666;">
+            <h3 style="margin:0 0 1rem 0; opacity:0.7;">Your analysis will appear here</h3>
+            <p style="margin:0; font-size:1.1rem;">Run the classifier on any news text</p>
+        </div>
+        """, unsafe_allow_html=True)
 
     if analyze_btn and text_input.strip() and selected_labels:
-        with st.spinner("Analyzing article..."):
-            pairs, elapsed = run_single(
-                text_input, selected_labels, threshold, top_n, multi_label
-            )
+        with st.spinner("Analyzing with AI..."):
+            pairs, elapsed = run_single(text_input, selected_labels, threshold, top_n, multi_label)
 
         st.session_state.total_scans += 1
         st.session_state.total_time += elapsed
@@ -190,64 +205,57 @@ with col_out:
         if pairs:
             top_label, top_score = pairs[0]
 
-            # Professional Metrics
+            # Creative Metrics
             c1, c2, c3 = st.columns([1.15, 0.95, 0.95])
-
             c1.markdown(f"""
-                <div class="metric-card">
+                <div class="metric-card glass">
                     <div class="metric-label">TOP CATEGORY</div>
-                    <div style="font-size:1.4rem; font-weight:600; line-height:1.3;">{top_label}</div>
+                    <div style="font-size:1.45rem; font-weight:600; line-height:1.3;">{top_label}</div>
                 </div>
             """, unsafe_allow_html=True)
 
             c2.markdown(f"""
-                <div class="metric-card">
+                <div class="metric-card glass">
                     <div class="metric-label">CONFIDENCE</div>
-                    <div style="color:#00d4ff; font-size:1.85rem; font-weight:600;">{top_score:.1%}</div>
+                    <div style="color:#00f0ff; font-size:2rem; font-weight:700;">{top_score:.1%}</div>
                 </div>
             """, unsafe_allow_html=True)
 
             c3.markdown(f"""
-                <div class="metric-card">
+                <div class="metric-card glass">
                     <div class="metric-label">INFERENCE TIME</div>
-                    <div style="font-size:1.85rem; font-weight:600;">{elapsed}s</div>
+                    <div style="font-size:1.9rem; font-weight:600;">{elapsed}s</div>
                 </div>
             """, unsafe_allow_html=True)
 
             # Bar Chart
-            df = pd.DataFrame({
-                "Category": [p[0] for p in pairs],
-                "Score": [p[1] for p in pairs]
-            }).sort_values("Score")
-
+            df = pd.DataFrame({"Category": [p[0] for p in pairs], "Score": [p[1] for p in pairs]}).sort_values("Score")
             fig = go.Figure(go.Bar(
-                x=df["Score"], 
-                y=df["Category"], 
-                orientation="h",
-                marker=dict(color="#00d4ff", opacity=0.85),
+                x=df["Score"], y=df["Category"], orientation="h",
+                marker=dict(color="#00f0ff", opacity=0.9),
                 text=[f"{s:.1%}" for s in df["Score"]],
                 textposition="outside"
             ))
             fig.update_layout(
-                paper_bgcolor="rgba(0,0,0,0)",
-                plot_bgcolor="rgba(0,0,0,0)",
-                height=max(200, len(pairs) * 42),
-                margin=dict(l=20, r=60, t=10, b=10),
-                xaxis=dict(range=[0, 1.1], tickformat=".0%"),
-                yaxis=dict(tickfont=dict(size=13))
+                paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+                height=max(220, len(pairs) * 45),
+                margin=dict(l=20, r=60, t=20, b=10),
+                xaxis=dict(range=[0, 1.15], tickformat=".0%")
             )
             st.plotly_chart(fig, use_container_width=True)
 
             # Detailed Results
-            st.markdown("**All Matches**")
+            st.markdown("**Detailed Breakdown**")
             for label, score in pairs:
                 st.markdown(f"""
-                <div class="result-card">
+                <div class="result-card glass">
                     <div class="rc-label">{label}</div>
-                    <div class="rc-bar-wrap">
-                        <div class="rc-bar" style="width: {score*100}%"></div>
+                    <div style="flex:1.6; background:#222; height:7px; border-radius:999px; overflow:hidden;">
+                        <div style="height:100%; width:{score*100}%; background:#00f0ff;"></div>
                     </div>
-                    <div style="font-family: monospace; min-width: 65px; text-align: right;">{score:.3f}</div>
+                    <div style="font-family:monospace; min-width:70px; text-align:right; color:#00f0ff;">
+                        {score:.3f}
+                    </div>
                 </div>
                 """, unsafe_allow_html=True)
 
@@ -274,9 +282,4 @@ with col_out:
                     file_name=f"news_classification_{datetime.now().strftime('%Y%m%d_%H%M')}.csv",
                     mime="text/csv", use_container_width=True)
 
-            # Save to history
-            st.session_state.history.append({
-                "label": top_label,
-                "score": top_score,
-                "text": text_input[:80] + "…" if len(text_input) > 80 else text_input
-            })
+            st.session_state.history.append({"label": top_label, "score": top_score, "text": text_input})
