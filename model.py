@@ -29,7 +29,6 @@ def load_model():
 
 
 def confidence_tier(score: float) -> str:
-    """Return confidence tier based on score."""
     if score >= 0.65:
         return "HIGH"
     elif score >= 0.40:
@@ -39,10 +38,6 @@ def confidence_tier(score: float) -> str:
 
 
 def run_single(text: str, labels: list, threshold=0.3, top_n=8, multi_label=True):
-    """
-    Run zero-shot classification on a single text.
-    Returns top results and inference time.
-    """
     if not text or not text.strip():
         return [], 0.0
 
