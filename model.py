@@ -5,7 +5,7 @@ from datetime import datetime
 # Global classifier
 classifier = None
 
-# Default news-focused labels
+# Labels
 ALL_LABELS = [
     "Technology", "Business", "Politics", "Sports", "Entertainment",
     "Health", "Science", "Environment", "Education", "Finance",
@@ -59,11 +59,11 @@ def run_single(text: str, labels: list, threshold=0.3, top_n=8, multi_label=True
         truncation=True
     )
     
-    # Create sorted pairs
+    # Sorted pairs
     pairs = list(zip(result['labels'], result['scores']))
     pairs = sorted(pairs, key=lambda x: x[1], reverse=True)
     
-    # Filter by threshold (multi-label)
+    # Filtering by threshold
     if multi_label:
         pairs = [p for p in pairs if p[1] >= threshold]
     else:
