@@ -49,7 +49,7 @@ def run_single(text: str, labels: list, threshold=0.3, top_n=8, multi_label=True
         text,
         candidate_labels=labels,
         multi_label=multi_label,
-        hypothesis_template="This text is about {}.",
+        hypothesis_template="This article is about {}.",
         truncation=True
     )
     
