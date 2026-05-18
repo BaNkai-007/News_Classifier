@@ -20,7 +20,7 @@ def load_model():
     if classifier is None:
         print("🔄 Loading model...")
         classifier = pipeline(
-            "multi-label-classification",
+            "zero-shot-classification",
             model="facebook/bart-large-mnli",
             device=0 if torch.cuda.is_available() else -1,
             torch_dtype=torch.float16 if torch.cuda.is_available() else None,
